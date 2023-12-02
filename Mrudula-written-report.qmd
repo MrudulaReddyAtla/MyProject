@@ -1,0 +1,233 @@
+---
+title: "MINI PROJECT 3 - DRAFT REPORT "
+format: pdf
+editor: visual
+---
+
+## Project Motivation :
+
+I chose Taylor Swift data set from **https://github.com/rfordatascience/tidytuesday** whose source is **https://taylor.wjakethompson.com/** .
+
+The recent Eras tour inspired me to explore this data set.
+
+## Research question :
+
+To find the relationship between dancability and energy in the alubms of taylor swift.
+
+## Description of the table
+
+This data was originally collected from genius and Spotify API
+
+**Main variables of interest :**
+
+**album_name :** Album name
+
+**dancebility :** Spotify danceability score. A value of 0.0 is least danceable and 1.0 is most danceable.
+
+**energy :** Spotify energy score. Energy is a measure from 0.0 to 1.0 and represents a perceptual measure of intensity and activity.
+
+**loudness : ** Spotify loudness score. The overall loudness of a track in decibels (dB). Loudness values are averaged across the entire track.
+
+**Details of the table taylor_album_songs are as follows when Glimpse function is used**
+
+```{r taylor_album_songs}
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+taylor_album_songs <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2023/2023-10-17/taylor_album_songs.csv')
+dplyr::glimpse(taylor_album_songs)
+head(taylor_album_songs)
+
+```
+
+**Structure of Data Frame is:**
+```{r}
+typeof(taylor_album_songs)
+```
+
+
+# Exploratory data analysis -
+
+## PLOT 1:
+
+Mapping of energy of the songs for each album 
+
+```{r}
+ggplot(taylor_album_songs, mapping=aes(energy, color=album_name)) + 
+  geom_freqpoly(binwidth=0.04) + facet_wrap(facets = vars(album_name))+
+  scale_color_discrete(name="Album Name")+
+labs(
+       x = "Energy", 
+       y = "No of Songs",
+    )
+```
+**Summary :** The songs with max energy are in the albums Red and Fearless
+Folklore has songs with lesser energy 
+
+
+## PLOT 2:
+Mapping of Danceability of songs for each album 
+```{r}
+ggplot(taylor_album_songs, mapping=aes(danceability, color=album_name)) + 
+  geom_freqpoly(binwidth=0.04) + facet_wrap(facets = vars(album_name))+
+    scale_color_discrete(name="Album Name")+
+labs(
+       x = "Danceability", 
+       y = "No of Songs",
+    )
+```
+**Summary :** Reputation has majority of the songs in its album that are danceable.
+
+## PLOT 3:
+
+Mapping of Danceability of each song in every album, each hexagon represents a song. Song count is no of songs in the same danceability bucket 
+```{r}
+ggplot(taylor_album_songs, mapping=aes(x=danceability, y=album_name)) + 
+  geom_hex() +
+  guides(fill=guide_legend(title="Song Count"))+
+labs(
+       x = "Danceability", 
+       y = "Album Name",
+    )
+
+```
+**Summary :** 
+Danceability of songs in the album Red is more grouped around 0.6 but in the album Lover the songs have danceability thats spread wide ranging from 0.2 to 1.0
+
+## PLOT 4:
+
+Mapping of dancebility and energy 
+
+```{r}
+ggplot(taylor_album_songs, mapping=aes(x=danceability, y=energy)) + 
+  geom_hex()+
+  guides(fill=guide_legend(title="Song Count"))+
+labs(
+       x = "Danceability", 
+       y = "Energy",
+     )
+  
+```
+**Summary :** Danceability and energy of most songs is in and around the point of intersection of 0.6 and 0.75
+
+## Danceability and Energy against other variables and their patterns
+
+## PLOT 5:
+
+Mapping loudness for all songs per album 
+
+```{r}
+ggplot(taylor_album_songs, mapping=aes(loudness, color=album_name)) + 
+  geom_freqpoly(binwidth=0.04) + facet_wrap(facets = vars(album_name))+
+  scale_color_discrete(name="Album Name")+
+labs(
+       x = "Loudness", 
+       y = "No of Songs",
+    )
+```
+**Summary :** The values for loudness doesnt look continuous and are spread out. Max 2 songs are in one bucket of loudness
+Midnight has lot of songs with high loudness, Speak Now album has low loudness 
+
+## PLOT 6:
+
+Mapping danceability vs loudness for all songs, each hexagon is a song, loudness is negative as it is in decibels. 
+```{r}
+ggplot(taylor_album_songs, mapping=aes(x=danceability, y=loudness)) + geom_hex()+
+guides(fill=guide_legend(title="Song Count"))+
+labs(
+       x = "Danceability", 
+       y = "Loudness",
+     )
+  
+```
+**Summary :** Most of Taylor swift songs are medium danceable(around 0.6) and less loud (between -4dB and -8dB).
+
+## PLOT 7:
+
+Mapping energy vs loudness for all songs, each hexagon is a song, loudness is negative as it is in decibels.
+
+```{r}
+ggplot(taylor_album_songs, mapping=aes(x=energy, y=loudness)) + geom_hex()+
+  guides(fill=guide_legend(title="Song Count"))+
+labs(
+       x = "Energy", 
+       y = "Loudness",
+     )
+  
+```
+**Summary :** Most of taylors songs are high on energy(0.6-0.8) and low on loudness(-4dB to -8dB)
+Energy and loudness appear to be highly correlated.
+
+
+
+
+## Correlation Tables 
+
+**Co-relation between Danceability and energy **
+```{r}
+taylor_album_songs = taylor_album_songs %>% 
+  drop_na(danceability) %>%
+  drop_na(energy)
+
+taylor_album_songs %>%
+  #filter(is.na(danceability,energy)=FALSE) %>%
+  group_by(album_name) %>% 
+  summarize(correlation = cor(danceability, energy),songs_ct= n(),mean_dan=mean(danceability,na.rm=TRUE),mean_en=mean(energy,na.rm=TRUE),sd_dan=sd(danceability,na.rm=TRUE), sd_en=sd(energy,na.rm=TRUE)) 
+ 
+```  
+
+**Observations : ** In general the correlation between danceability and energy isnt prominent. Evermore with a value close to 0.5 has highest corrlation between danceability and energy. And, as deduced from the plots earlier Lover has more spreadout in danceability with maximum Standard Deviation and Red has the least spread in danceability.
+
+**Co-relation between Energy and Loudness**
+```{r}
+taylor_album_songs = taylor_album_songs %>% 
+  drop_na(energy) %>%
+  drop_na(loudness)
+
+taylor_album_songs %>%
+  #filter(is.na(energy,loudness)=FALSE) %>%
+  group_by(album_name) %>% 
+  summarize(correlation = cor(energy, loudness),n= n(),mean_en=mean(energy,na.rm=TRUE),mean_loud=mean(loudness,na.rm=TRUE),sd_en=sd(energy,na.rm=TRUE), sd_loud=sd(loudness,na.rm=TRUE)) 
+
+```
+**Observations : ** Energy and loudness are highly correlated with correlation coefficient being around 0.8 for most albums. Almost all albums have similar standard deviation for energy meaning the pattern of spread of energy for songs is similar in all albums. Lover album is one exception to this. 
+
+
+**Co-relation between Danceability and Loudness**
+```{r}
+taylor_album_songs = taylor_album_songs %>% 
+  drop_na(danceability) %>%
+  drop_na(loudness)
+
+taylor_album_songs %>%
+  #filter(is.na(Danceability,loudness)=FALSE) %>%
+  group_by(album_name) %>% 
+  summarize(correlation = cor(danceability, loudness),n= n(),mean_dan=mean(danceability,na.rm=TRUE),mean_loud=mean(loudness,na.rm=TRUE),sd_dan=sd(danceability,na.rm=TRUE), sd_loud=sd(loudness,na.rm=TRUE) )
+
+``` 
+**Observations : **   Correlation between Danceability and loudness is very low. Most of the albums have SD around the value 2 or closer to 2. Most albums have similar spread for loudness.
+
+# Methodology 
+
+### Description of Analysis Process  
+
+Analysed 3 prominent variables from the data set taylo_album_songs - energy, danceability and loudness. Plotted the histograms for each of the variables with respect to individual album. Compared dependency of one variable over the other using correlation plots to derive a relation between them. Tried to look at the same using correlation coefficients in each album along with mean and standard deviation of each variable.   
+
+### Reason for chossing this Analysis Process for the research question and how you arrived to final answer 
+
+- The reason why histogram was chosen is to get the distribution of each of these variables in each album. Histogram is a better visual aid to look at the frequency of songs over the variables.
+- Correlation graphs were used to see the spread of variables and their dependency on each other. The points in the graph appear closer to a straight line if the variables are strongly correlated.
+- The summary tables will give a better estimate of dependency with numeric values to look at. While the correlation plots are helpful for visualisation, the tables are for calculations.
+
+### Answer to research question in 2 paragraphs 
+From the analysis we can see that energy and loudness are related across albums. High energy songs are very loud. But Danceability isnt strongly related to either of these variables. Most of the songs have a danceability of 0.6 , meaning they are neither high nor too low on danceability. But most of the songs are high on energy(0.6-0.8) and low on loudness(-4dB to-8dB) even though they are strongly correlated. That is because overall loudness iself is low.
+
+Looking at each album individually, 
+- Album Red has maximum energy while album Fearless has less energy 
+- Danceability of songs in the album Red is more grouped but in the album Lover the songs have danceability thats spread wide.
+- Midnight has lot of songs with high loudness, Speak Now album has low loudness
+
+
+
+
+
